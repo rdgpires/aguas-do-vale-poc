@@ -1,0 +1,12 @@
+Você recebe a anotação de um técnico de campo sobre uma visita.
+Classifique usando apenas as categorias abaixo.
+
+tipo: hidrometro_parado | ligacao_clandestina | cadastro_errado | outro | null
+motivo_nao_acesso: condominio | ausente | recusa | outro | null
+
+Se a anotação não permitir decidir, use null.
+Responda apenas com JSON no formato definido.
+
+Formato: {"irregularidade": true|false, "tipo": ..., "motivo_nao_acesso": ...}
+Regra: se houve motivo de não acesso, irregularidade é false e tipo é null.
+Dados pessoais já foram mascarados ([NOME], [CPF], [TELEFONE], [ENDERECO]); ignore-os.

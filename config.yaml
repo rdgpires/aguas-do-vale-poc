@@ -1,0 +1,81 @@
+# Configuração operacional da PoC. Nada aqui exige mudar código.
+
+referencia_padrao: "2026-08"      # mês de referência YYYY-MM
+formulacao: v2                    # v1 = queda de consumo | v2 = queda INEXPLICADA
+
+# --- Restrições da fila (aparecem no slide) ---
+visitas_por_equipe: 8
+limite_condominios_por_equipe: 2
+regioes_com_dupla:
+  - norte
+
+# --- Capacidade ---
+dias_uteis_mes: 21
+# Em bases menores que 500 mil ligações a capacidade é reduzida na mesma proporção,
+# para manter a seletividade (2.016 visitas / 500 mil) e o A/B comparável.
+escalar_capacidade_pela_base: true
+ligacoes_base_referencia: 500000
+meses_sem_visita: 6               # ligação visitada há menos que isso fica fora
+
+equipes:
+  - {equipe_id: E01, tipo: individual, regiao_base: sul}
+  - {equipe_id: E02, tipo: individual, regiao_base: sul}
+  - {equipe_id: E03, tipo: individual, regiao_base: leste}
+  - {equipe_id: E04, tipo: individual, regiao_base: leste}
+  - {equipe_id: E05, tipo: individual, regiao_base: oeste}
+  - {equipe_id: E06, tipo: dupla,      regiao_base: norte}
+  - {equipe_id: E07, tipo: individual, regiao_base: sul}
+  - {equipe_id: E08, tipo: individual, regiao_base: leste}
+  - {equipe_id: E09, tipo: individual, regiao_base: centro}
+  - {equipe_id: E10, tipo: individual, regiao_base: oeste}
+  - {equipe_id: E11, tipo: individual, regiao_base: centro}
+  - {equipe_id: E12, tipo: dupla,      regiao_base: norte}
+
+# --- Fontes: registro de adapters (ports and adapters) ---
+# Para trocar a origem basta mudar `tipo` e os parâmetros. Ver src/sources/registro.py.
+fontes:
+  cadastro:     {tipo: arquivo, caminho: data/bruto/cadastro_ligacao.parquet}
+  consumo:      {tipo: arquivo, caminho: data/bruto/consumo_mensal.parquet}
+  trocas:       {tipo: arquivo, caminho: data/bruto/troca_hidrometro.parquet}
+  historico:    {tipo: arquivo, caminho: data/bruto/historico_categoria.parquet}
+  telemetria:   {tipo: arquivo, caminho: data/bruto/vazao_setor.parquet}
+  ordens:       {tipo: arquivo, caminho: data/bruto/ordem_servico.parquet}
+  # Exemplo futuro (NÃO implementado):
+  # cadastro:   {tipo: sql, dsn_env: COMERCIAL_DSN, consulta: sql/cadastro.sql}
+
+armazenamento:
+  tipo: local_parquet
+  raiz: data/lake
+
+saidas:
+  raiz: data/saida
+
+# --- Rotulagem ---
+llm:
+  provedor: offline               # offline | anthropic (env LLM_PROVEDOR sobrescreve)
+  modelo: claude-haiku-5-5
+  prompt: prompts/rotulagem_v1.txt
+  versao_prompt: v1
+  tentativas: 3
+  espera_inicial_s: 1.0
+  tamanho_lote: 200
+  concorrencia: 4
+  preco_por_milhao_tokens: {entrada: 1.0, saida: 5.0}   # USD, estimativa
+
+# --- Modelo / prioridade ---
+modelo:
+  fator_categoria:                # comércio rende mais que residência
+    residencial: 1.0
+    comercial: 1.3
+    industrial: 1.5
+    publica: 0.8
+  janela_troca_dias: 120
+  janela_mudanca_uso_dias: 180
+
+# --- A/B e valor ---
+experimento:
+  grupo_regra: [E01, E02, E03, E04, E05, E06]
+  grupo_poc:   [E07, E08, E09, E10, E11, E12]
+  verdade_oculta: data/oculto/verdade_oculta.parquet   # só o simulador lê
+  taxa_acerto_base: 0.20
+  valor_ponto_pp_ano_reais: 3000000

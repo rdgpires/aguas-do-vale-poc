@@ -1,0 +1,15 @@
+[project]
+name = "aguas-do-vale-poc"
+version = "0.1.0"
+description = "PoC: priorização da fila mensal de visitas de campo para perda aparente de água"
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.1", "numpy>=1.26", "pyarrow>=14", "pydantic>=2.5", "pyyaml>=6",
+  "scikit-learn>=1.3", "streamlit>=1.30", "altair>=5", "typer>=0.9",
+]
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.30"]
+
+[tool.setuptools]
+packages = []   # projeto roda da raiz (python -m src.pipeline); o pip só instala dependências
